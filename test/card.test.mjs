@@ -304,8 +304,31 @@ test("sections fold on click and fold back on a click elsewhere", () => {
   click(card, { action: "toggle_section", section: "details" });
   assert.match(html(card), /data-section="details" aria-expanded="true"/);
   card.connectedCallback();
-  card._onOutside({ composedPath: () => [] });
+  card._outside.tap({ composedPath: () => [] });
   assert.match(html(card), /data-section="details" aria-expanded="false"/);
+});
+
+test("folding: a tap elsewhere (pointer), not a drag that ends outside; leaving the page folds back too", () => {
+  const card = mount(lib.DoorbellCard, FRONT);
+  card.connectedCallback();
+  const open = /data-section="details" aria-expanded="true"/;
+  click(card, { action: "toggle_section", section: "details" });
+  // A slider pressed in the card and released outside of it: nothing folds.
+  card._outside.tap({ composedPath: () => [card] });
+  assert.match(html(card), open);
+  // Left with the section open and back: folded.
+  card.disconnectedCallback();
+  card.connectedCallback();
+  assert.doesNotMatch(html(card), open);
+  card.disconnectedCallback();
+  const mini = mount(lib.DoorbellMiniCard, FRONT);
+  mini.connectedCallback();
+  click(mini, { action: "zoom" });
+  assert.match(html(mini), /class="cam/);
+  mini.disconnectedCallback();
+  mini.connectedCallback();
+  assert.doesNotMatch(html(mini), /class="cam/, "back compact");
+  mini.disconnectedCallback();
 });
 
 test("mini card: compact last visitor, detail button switching to the full card", () => {
@@ -318,7 +341,7 @@ test("mini card: compact last visitor, detail button switching to the full card"
   assert.match(html(card), /class="cam/);
   assert.match(html(card), /aria-label="Show less"/);
   assert.equal(card.getGridOptions().columns, 12);
-  card._onUnzoom({ composedPath: () => [] });
+  card._unzoom.tap({ composedPath: () => [] });
   assert.doesNotMatch(html(card), /class="cam/);
   assert.doesNotMatch(html(mount(lib.DoorbellMiniCard, { ...FRONT, zoom: false })), /class="zoom"/);
 });

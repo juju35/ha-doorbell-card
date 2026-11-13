@@ -675,6 +675,41 @@ const isOutside = (card, ev) => {
   return !path.includes(card) && !path.some((n) => DIALOG_TAGS.has(n.tagName));
 };
 
+// "A click elsewhere" is caught on the pointer, not only on the click event: on iOS (Safari and the companion app) a
+// tap on something that is not clickable (the background, an empty spot, a card with no action) sends no click to the
+// page. It counts when the press and the release are both outside the card (a slider dragged out of the card does not
+// fold it), and a scroll does not count (the browser cancels the pointer). Keyboard clicks still go through the click
+// event. `tap(ev)` (a press and a release at the same spot) is for the tests.
+const watchOutside = (isOut, handler) => {
+  let downOutside = false;
+  const onDown = (ev) => {
+    downOutside = isOut(ev);
+  };
+  const onUp = (ev) => {
+    if (downOutside && isOut(ev)) handler(ev);
+    downOutside = false;
+  };
+  const onClick = (ev) => {
+    if (ev.detail === 0 && isOut(ev)) handler(ev);
+  };
+  return {
+    on() {
+      document.addEventListener("pointerdown", onDown, true);
+      document.addEventListener("pointerup", onUp, true);
+      document.addEventListener("click", onClick, true);
+    },
+    tap(ev) {
+      onDown(ev);
+      onUp(ev);
+    },
+    off() {
+      document.removeEventListener("pointerdown", onDown, true);
+      document.removeEventListener("pointerup", onUp, true);
+      document.removeEventListener("click", onClick, true);
+    },
+  };
+};
+
 const FOCUS_SELECTOR = "[data-action], [data-entity]";
 const focusKey = (el) => {
   const data = Object.entries({ ...el.dataset });
@@ -747,13 +782,16 @@ class DoorbellBase extends HTMLElement {
 
   connectedCallback() {
     // A click elsewhere on the page folds the sections back to their defaults and closes the popup.
-    this._onOutside ??= (ev) => {
-      if ((!this._toggled?.size && !this._popup) || !isOutside(this, ev)) return;
-      this._toggled = new Map();
-      if (this._popup) this._closePopup();
-      else this._update();
-    };
-    document.addEventListener("click", this._onOutside, true);
+    this._outside ??= watchOutside(
+      (ev) => isOutside(this, ev),
+      () => {
+        if (!this._toggled?.size && !this._popup) return;
+        this._toggled = new Map();
+        if (this._popup) this._closePopup();
+        else this._update();
+      },
+    );
+    this._outside.on();
     if (this._popup) window.addEventListener("keydown", this._onKey);
     this._onVisibility ??= () => this._syncCamera();
     document.addEventListener("visibilitychange", this._onVisibility);
@@ -774,6 +812,8 @@ class DoorbellBase extends HTMLElement {
     }, 30000);
     this._startRefresh();
     if (this._hass) this._loadHistory();
+    // Back on the page after leaving it: rendered again in its default state.
+    if (this._hass && this._config) this._update();
   }
 
   disconnectedCallback() {
@@ -785,8 +825,12 @@ class DoorbellBase extends HTMLElement {
     this._opening = 0;
     this._ringTimerFor = undefined;
     this._tick = this._refresh = null;
-    document.removeEventListener("click", this._onOutside, true);
+    this._outside?.off();
     document.removeEventListener("visibilitychange", this._onVisibility);
+    // Left (another dashboard view, a conditional card hidden): back to the defaults, so that the card does not come
+    // back unfolded or with its popup open.
+    this._toggled = new Map();
+    this._popup = null;
     window.removeEventListener("keydown", this._onKey);
     this._observer?.disconnect();
     this._stream?.remove();
@@ -1540,9 +1584,12 @@ class DoorbellCard extends DoorbellBase {
 class DoorbellMiniCard extends DoorbellCard {
   constructor() {
     super();
-    this._onUnzoom = (ev) => {
-      if (this._zoomed && isOutside(this, ev)) this._setZoom(false);
-    };
+    this._unzoom = watchOutside(
+      (ev) => isOutside(this, ev),
+      () => {
+        if (this._zoomed) this._setZoom(false);
+      },
+    );
   }
 
   static getConfigElement() {
@@ -1551,12 +1598,14 @@ class DoorbellMiniCard extends DoorbellCard {
 
   connectedCallback() {
     super.connectedCallback();
-    document.addEventListener("click", this._onUnzoom, true);
+    this._unzoom.on();
   }
 
   disconnectedCallback() {
     super.disconnectedCallback();
-    document.removeEventListener("click", this._onUnzoom, true);
+    this._unzoom.off();
+    // Back to the compact view once off the screen (see the full card).
+    this._zoomed = false;
   }
 
   getCardSize() {
