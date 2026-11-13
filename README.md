@@ -8,6 +8,18 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/juju35/ha-doorbell-card/blob/main/LICENSE)
 [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buymeacoffee&logoColor=black)](https://buymeacoffee.com/julienstep9)
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/ring.png" alt="Ring" width="64">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/reolink.png" alt="Reolink" width="64">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/unifiprotect.png" alt="UniFi Protect" width="64">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/nest.png" alt="Google Nest" width="64">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/tapo_control.png" alt="Tapo" width="64">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/doorbird.png" alt="DoorBird" width="64">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/matter.png" alt="Matter" width="64">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/homekit.png" alt="HomeKit" width="64">&nbsp;&nbsp;
+  <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/frigate.png" alt="Frigate" width="64">
+</p>
+
 Lovelace cards for Home Assistant **video doorbells and intercoms**: camera preview, last visitor (time and snapshot), ring history and quick actions — open the door or the gate (with a confirmation), send a quick message (text-to-speech or the doorbell's own display) and mute the chime — with a drawn doorbell that rings, vibrates and watches along with yours.
 
 The cards work on top of the integrations you already use — [Ring](https://www.home-assistant.io/integrations/ring/), [Reolink](https://www.home-assistant.io/integrations/reolink/), [UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect/), [Google Nest](https://www.home-assistant.io/integrations/nest/), [Tapo](https://github.com/JurajNyiri/HomeAssistant-Tapo-Control), [DoorBird](https://www.home-assistant.io/integrations/doorbird/), Aqara (through [Matter](https://www.home-assistant.io/integrations/matter/) or [HomeKit Device](https://www.home-assistant.io/integrations/homekit_controller/)), [Frigate](https://github.com/blakeblackshear/frigate-hass-integration) and more. The doorbell's entities (`event`, `binary_sensor`, `camera`, `lock`, `button`, `switch`, `image`…) are **discovered automatically** from the Home Assistant registries, whatever your language or entity ids; each one can also be set by hand.
@@ -40,14 +52,14 @@ The cards work on top of the integrations you already use — [Ring](https://www
 
 | Integration | Doorbells | What the cards use |
 |---|---|---|
-| [Ring](https://www.home-assistant.io/integrations/ring/) (core) | Ring Video Doorbell, Battery Doorbell, Doorbell Pro, Peephole Cam | Ding and motion `event` entities, live view `camera`, battery `sensor`, snapshot `image` |
-| [Reolink](https://www.home-assistant.io/integrations/reolink/) (core) | Reolink Video Doorbell (WiFi, PoE) | Visitor, motion and person `binary_sensor` entities, Fluent / Clear `camera`, doorbell button sound `switch` (mute) |
-| [UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect/) (core) | G4 Doorbell, G4 Doorbell Pro, G6 Entry | Doorbell `event`, motion and person detection `binary_sensor` entities, `camera`, doorbell text `select` and `text` (quick messages on the doorbell's screen) |
-| [Google Nest](https://www.home-assistant.io/integrations/nest/) (core) | Nest Doorbell (wired, battery) | Chime, motion and person `event` entities, `camera` |
-| [Tapo](https://github.com/JurajNyiri/HomeAssistant-Tapo-Control) (custom, `tapo_control`) | Tapo video doorbells (D230, D225…) | Doorbell ring and motion / person sensors, `camera`, chime switch |
-| [DoorBird](https://www.home-assistant.io/integrations/doorbird/) (core) | DoorBird D10x, D11x, D21x, D2101V… | Doorbell and motion `event` entities, `camera`, relay `button` (opens the gate) |
-| [Matter](https://www.home-assistant.io/integrations/matter/) / [HomeKit Device](https://www.home-assistant.io/integrations/homekit_controller/) (core) | Aqara G4 and other Matter / HomeKit doorbells | Doorbell `event` (device class `doorbell`), `camera`, motion sensor |
-| [Frigate](https://github.com/blakeblackshear/frigate-hass-integration) (custom) | Any camera watched by Frigate | Person occupancy `binary_sensor`, motion, `camera`, last snapshot `image`: pick the camera device and set the doorbell entity (`doorbell`) of the button you use |
+| <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/ring.png" alt="" width="16"> [Ring](https://www.home-assistant.io/integrations/ring/) (core) | Ring Video Doorbell, Battery Doorbell, Doorbell Pro, Peephole Cam | Ding and motion `event` entities, live view `camera`, battery `sensor`, snapshot `image` |
+| <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/reolink.png" alt="" width="16"> [Reolink](https://www.home-assistant.io/integrations/reolink/) (core) | Reolink Video Doorbell (WiFi, PoE) | Visitor, motion and person `binary_sensor` entities, Fluent / Clear `camera`, doorbell button sound `switch` (mute) |
+| <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/unifiprotect.png" alt="" width="16"> [UniFi Protect](https://www.home-assistant.io/integrations/unifiprotect/) (core) | G4 Doorbell, G4 Doorbell Pro, G6 Entry | Doorbell `event`, motion and person detection `binary_sensor` entities, `camera`, doorbell text `select` and `text` (quick messages on the doorbell's screen) |
+| <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/nest.png" alt="" width="16"> [Google Nest](https://www.home-assistant.io/integrations/nest/) (core) | Nest Doorbell (wired, battery) | Chime, motion and person `event` entities, `camera` |
+| <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/tapo_control.png" alt="" width="16"> [Tapo](https://github.com/JurajNyiri/HomeAssistant-Tapo-Control) (custom, `tapo_control`) | Tapo video doorbells (D230, D225…) | Doorbell ring and motion / person sensors, `camera`, chime switch |
+| <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/doorbird.png" alt="" width="16"> [DoorBird](https://www.home-assistant.io/integrations/doorbird/) (core) | DoorBird D10x, D11x, D21x, D2101V… | Doorbell and motion `event` entities, `camera`, relay `button` (opens the gate) |
+| <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/matter.png" alt="" width="16"> [Matter](https://www.home-assistant.io/integrations/matter/) / <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/homekit.png" alt="" width="16"> [HomeKit Device](https://www.home-assistant.io/integrations/homekit_controller/) (core) | Aqara G4 and other Matter / HomeKit doorbells | Doorbell `event` (device class `doorbell`), `camera`, motion sensor |
+| <img src="https://raw.githubusercontent.com/juju35/ha-doorbell-card/main/images/frigate.png" alt="" width="16"> [Frigate](https://github.com/blakeblackshear/frigate-hass-integration) (custom) | Any camera watched by Frigate | Person occupancy `binary_sensor`, motion, `camera`, last snapshot `image`: pick the camera device and set the doorbell entity (`doorbell`) of the button you use |
 | eufy Security, Blink, Amcrest, Hikvision, ONVIF… | Doorbells exposing an event or a binary sensor | Recognized from their entities as well; any entity can be set by hand (see [Entities](#entities)) |
 
 A device is listed as a doorbell when it has an `event` entity of device class `doorbell`, or an `event` / `binary_sensor` entity named after a ring (ding, doorbell, visitor, ring, chime, press…). A door lock, a gate relay or a speaker of another device is set with the `lock` and `tts_entity` options. Details in [How it works](#how-it-works).
