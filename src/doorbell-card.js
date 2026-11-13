@@ -1764,7 +1764,13 @@ class DoorbellEditorBase extends HTMLElement {
         name: "",
         title: tr("opt_entities"),
         icon: "mdi:tune-variant",
-        schema: ENTITY_FIELDS.map(([name, domain]) => ({ name, selector: { entity: { domain } } })),
+        schema: ENTITY_FIELDS.flatMap(([name, domain]) => {
+          const field = { name, selector: { entity: { domain } } };
+          if (name !== "mute") return [field];
+          // mute_inverted: unset (from the switch's name), true or false; a select, as a toggle has no "automatic".
+          const options = ["auto", "true", "false"].map((v) => ({ value: v, label: tr(`mute_inverted_${v}`) }));
+          return [field, { name: "mute_inverted", selector: { select: { mode: "dropdown", options } } }];
+        }),
       },
       { name: "messages", selector: { text: { multiple: true } } },
       { name: "language", selector: { select: { mode: "dropdown", options: [{ value: "", label: tr("lang_auto") }, ...LANGUAGES.map(([value, label]) => ({ value, label }))] } } },
@@ -1783,6 +1789,8 @@ class DoorbellEditorBase extends HTMLElement {
       this._form.addEventListener("value-changed", (ev) => {
         ev.stopPropagation();
         const config = { ...ev.detail.value };
+        if (config.mute_inverted === "true" || config.mute_inverted === "false") config.mute_inverted = config.mute_inverted === "true";
+        else delete config.mute_inverted;
         for (const [k, v] of Object.entries(config)) {
           // Keep the YAML minimal: drop empty values and options left at their default.
           const empty = v === "" || v === undefined || v === null || (Array.isArray(v) && !v.length && k === "messages");
@@ -1794,7 +1802,7 @@ class DoorbellEditorBase extends HTMLElement {
       });
       this.appendChild(this._form);
     }
-    const data = { ...defaults, ...this._config };
+    const data = { ...defaults, ...this._config, mute_inverted: typeof this._config.mute_inverted === "boolean" ? String(this._config.mute_inverted) : "auto" };
     if (!data.device && !data.camera && !data.doorbell) data.device = DoorbellCard.getStubConfig(this._hass).device;
     this._form.hass = this._hass;
     const h = this._hass;
@@ -1830,15 +1838,10 @@ class DoorbellCardEditor extends DoorbellEditorBase {
   }
 }
 
-class DoorbellMiniCardEditor extends DoorbellEditorBase {
+// The detailed view of the mini card is the full card: its editor offers the full card's options, and the zoom button.
+class DoorbellMiniCardEditor extends DoorbellCardEditor {
   static get toggles() {
-    return [
-      ["show_title", true],
-      ["show_camera", true],
-      ["show_actions", true],
-      ["confirm_open", true],
-      ["zoom", true],
-    ];
+    return [...DoorbellCardEditor.toggles, ["zoom", true]];
   }
 }
 

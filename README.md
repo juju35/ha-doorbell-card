@@ -179,22 +179,22 @@ lock: switch.gate_relay
 | `device` | both | First doorbell | Device to display: its name (as shown in Home Assistant) or its device id (set by the visual editor) |
 | `title` | both | Device name | Card title |
 | `show_title` | both | `true` | Show the title in the header (e.g. `false` under a section heading of your own) |
-| `show_subtitle` | full | `true` | Show the brand and model under the title |
+| `show_subtitle` | both | `true` | Show the brand and model under the title |
 | `image` | both | `auto` | Picture: `auto` (drawn doorbell, animated), `none`, or the URL of your own picture (e.g. `/local/my-doorbell.png`) |
 | `color` | both | `auto` | Color of the drawn doorbell: `auto` (white for Nest and UniFi Protect, stainless steel for DoorBird, dark otherwise), `dark`, `white` or `steel` |
 | `show_camera` | both | `true` | Camera preview (full card) |
-| `show_last` | full | `true` | Last visitor: time, day, how long ago and snapshot |
+| `show_last` | both | `true` | Last visitor: time, day, how long ago and snapshot |
 | `show_actions` | both | `true` | Open, Message and Mute buttons (the mini card shows Open and Mute) |
-| `show_details` | full | `true` | Rings today, last motion, lock and battery |
-| `show_history` | full | `true` | Ring history |
+| `show_details` | both | `true` | Rings today, last motion, lock and battery |
+| `show_history` | both | `true` | Ring history |
 | `confirm_open` | both | `true` | Ask before opening the door; `false` opens at once |
-| `camera_view` | full | `snapshot` | `snapshot` (refreshed every `refresh_interval` seconds) or `live` (the camera's stream, when Home Assistant's camera player is loaded; falls back to the snapshot) |
+| `camera_view` | both | `snapshot` | `snapshot` (refreshed every `refresh_interval` seconds) or `live` (the camera's stream, when Home Assistant's camera player is loaded; falls back to the snapshot) |
 | `refresh_interval` | both | `10` | Seconds between two snapshots of the preview (`0`: only when Home Assistant gives a new picture). Nothing is loaded while the card is hidden, and the live stream stops |
 | `ring_duration` | both | `30` | Seconds a ring is shown as **Ringing** after a doorbell `event`, or after a doorbell `binary_sensor` turned on (and while it stays on); also used for motion and person events |
-| `history_hours` | full | `24` | Period of the ring history, in hours |
-| `history_count` | full | `5` | Rings listed in the history |
-| `collapsed` | full | `[details]` | Sections folded by default, among `details` and `history` (`[]` to unfold everything) |
-| `zoom` | mini | `true` | Detail button at the top right of the mini card: it shows the full card's content (with the same options) and switches back to the compact view; a click outside the card also brings the compact view back. `false` removes the button |
+| `history_hours` | both | `24` | Period of the ring history, in hours |
+| `history_count` | both | `5` | Rings listed in the history |
+| `collapsed` | both | `[details]` | Sections folded by default, among `details` and `history` (`[]` to unfold everything) |
+| `zoom` | mini | `true` | Detail button at the top right of the mini card: it shows the full card's content (with the same options, so `show_history`, `collapsed`, `camera_view`… can be set on the mini card too, in YAML or in its visual editor) and switches back to the compact view; a click outside the card also brings the compact view back. `false` removes the button |
 | `messages` | both | — | Quick messages of the **Message** button. Without a list, the options of the doorbell's message `select` (UniFi Protect) are offered |
 | `tts_entity` | both | — | Speaker (`media_player`) that speaks the quick messages |
 | `tts_engine` | both | First `tts` entity | Text-to-speech engine used with `tts_entity` |
@@ -211,7 +211,7 @@ Every entity is found on the device; these options replace what was found, or co
 | `motion` | `event`, `binary_sensor` | Named motion, else device class `motion` (person, vehicle or package detections that carry this device class are left out) |
 | `person` | `event`, `binary_sensor` | Named person, people, human, face or occupancy (Frigate) |
 | `lock` | `lock`, `button`, `switch`, `script`, `input_button` | The device's lock, else a button or switch named open, unlock, relay, gate, strike, door, buzzer (never a configuration or diagnostic entity, such as a restart button) |
-| `mute` | `switch`, `input_boolean` | Named mute, do not disturb, silent, chime, button sound, ringtone. A switch named after the sound (chime, button sound) is on while the doorbell rings aloud: **Mute** turns it off. `mute_inverted: true / false` overrides this |
+| `mute` | `switch`, `input_boolean` | Named mute, do not disturb, silent, chime, button sound, ringtone. A switch named after the sound (chime, button sound) is on while the doorbell rings aloud: **Mute** turns it off. `mute_inverted: true / false` overrides this (also in the visual editor, under the mute switch) |
 | `snapshot` | `image` | The device's image (last event snapshot) |
 | `battery` | `sensor` | Device class `battery` |
 | `message_entity` | `select`, `text` | Named message, LCD or doorbell text; UniFi Protect's doorbell `text` (any message) and its doorbell text `select` (the console's messages) |
