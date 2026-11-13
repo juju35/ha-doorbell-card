@@ -308,6 +308,27 @@ test("sections fold on click and fold back on a click elsewhere", () => {
   assert.match(html(card), /data-section="details" aria-expanded="false"/);
 });
 
+test("no rewrite under a press: an update is held until the click, which draws it at once, or the release", async () => {
+  const card = mount(lib.DoorbellCard, FRONT);
+  const open = /data-section="details" aria-expanded="true"/;
+  // Pressed: an update (here the section's state changed from elsewhere) does not rewrite the card under the pointer.
+  card._onPress();
+  card._toggled = new Map([["details", false]]);
+  card._update();
+  assert.doesNotMatch(html(card), open, "held under the press");
+  // Released without a click: drawn right after.
+  card._onPressEnd();
+  await tick();
+  assert.match(html(card), open);
+  // The click itself draws at once.
+  card._onPress();
+  card._onPressClick({ detail: 1 });
+  click(card, { action: "toggle_section", section: "details" });
+  assert.doesNotMatch(html(card), open);
+  card._onPressEnd();
+  await tick();
+});
+
 test("folding: a tap elsewhere (pointer), not a drag that ends outside; leaving the page folds back too", () => {
   const card = mount(lib.DoorbellCard, FRONT);
   card.connectedCallback();
