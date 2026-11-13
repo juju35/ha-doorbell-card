@@ -1,6 +1,6 @@
 {
   "name": "ha-doorbell-card",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Lovelace cards for Home Assistant video doorbells and intercoms: camera preview, last visitor, ring history and quick actions (open the door, quick message, mute) for Ring, Reolink, UniFi Protect, Google Nest, Tapo, DoorBird, Aqara, Frigate and more.",
   "private": true,
   "type": "module",

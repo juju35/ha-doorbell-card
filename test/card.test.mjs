@@ -430,8 +430,36 @@ test("visual editor: stub config, labels, minimal YAML", () => {
   const mini = new lib.DoorbellMiniCardEditor();
   mini.setConfig({});
   mini.hass = hass;
-  assert.ok(JSON.stringify(mini.children[0].schema).includes('"zoom"'));
-  assert.ok(!JSON.stringify(mini.children[0].schema).includes('"collapsed"'));
+  const miniNames = JSON.stringify(mini.children[0].schema);
+  assert.ok(miniNames.includes('"zoom"'));
+  assert.ok(!names.includes('"zoom"'));
+  // The mini card's detailed view is the full card: its editor offers the full card's options too.
+  for (const n of ["show_subtitle", "show_last", "show_details", "show_history", "camera_view", "collapsed", "history_count", "history_hours", "mute_inverted"]) {
+    assert.ok(miniNames.includes(`"${n}"`), n);
+  }
+});
+
+test("visual editor: mute_inverted is automatic, true or false", () => {
+  const ed = new lib.DoorbellCardEditor();
+  ed.setConfig({ type: "custom:doorbell-card", mute_inverted: false });
+  ed.hass = makeHass();
+  const form = ed.children[0];
+  assert.ok(JSON.stringify(form.schema).includes('"mute_inverted"'));
+  assert.equal(form.data.mute_inverted, "false");
+  assert.equal(form.computeLabel({ name: "mute_inverted" }), "Chime or mute switch direction");
+  const events = [];
+  ed.dispatchEvent = (ev) => events.push(ev);
+  const change = (mute_inverted) => form.listeners["value-changed"]({ stopPropagation() {}, detail: { value: { type: "custom:doorbell-card", mute_inverted } } });
+  change("true");
+  change("auto");
+  change("false");
+  eq(events[0].detail.config, { type: "custom:doorbell-card", mute_inverted: true });
+  eq(events[1].detail.config, { type: "custom:doorbell-card" });
+  eq(events[2].detail.config, { type: "custom:doorbell-card", mute_inverted: false });
+  const auto = new lib.DoorbellMiniCardEditor();
+  auto.setConfig({});
+  auto.hass = makeHass();
+  assert.equal(auto.children[0].data.mute_inverted, "auto");
 });
 
 test("the cards are registered for the card picker", () => {

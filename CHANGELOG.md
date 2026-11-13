@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.0.2 - 2026-11-14
+
+### Fixes
+- Visual editors: `mute_inverted` was YAML only; both editors now offer it under the mute switch, as Automatic (from the switch's name), on while it rings aloud, or on while muted, in every language.
+- Mini card visual editor: it now offers the full card's options that its detailed view uses (`show_subtitle`, `show_last`, `show_details`, `show_history`, `camera_view`, `collapsed`, `history_count`, `history_hours`), which could only be set in YAML.
+
 ## 1.0.1 - 2026-11-13
 
 ### Fixes
