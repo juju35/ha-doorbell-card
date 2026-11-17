@@ -186,13 +186,15 @@ test("the full card shows the picture, the camera, the last visitor, the actions
   assert.match(h, /class="hero"/);
   assert.match(h, /data-img="\d+"/, "drawn doorbell picture");
   assert.match(h, /data-cam="camera\.front_door_fluent"/);
-  assert.match(h, /Last visitor · <b>/);
+  // Idle: the status is in the header pill, the big line is the last visitor's time, not a second "Idle".
+  assert.match(h, /<span>Last visitor<\/span><\/div>\s*<div class="state visit-time clickable"/);
+  assert.doesNotMatch(h, /<div class="state ok">/);
   assert.match(h, /data-action="open"/);
   assert.match(h, /data-action="messages"/);
   assert.match(h, /data-action="mute"/);
   assert.match(h, /Recent rings/);
   assert.equal((h.match(/class="hist-row"/g) || []).length, 4);
-  assert.match(h, /class="chip clickable ok"/);
+  assert.match(h, /class="title-row">\s*<div class="name">[^<]*<\/div>\s*<span class="chip clickable idle"/, "status pill right after the title, gray when idle");
   // Details folded by default, history unfolded: chevrons follow.
   assert.match(h, /data-section="details" aria-expanded="false"/);
   assert.match(h, /data-section="history" aria-expanded="true"/);
@@ -205,6 +207,8 @@ test("while ringing, the picture vibrates and the camera shows a banner", () => 
   const card = mount(lib.DoorbellCard, FRONT, makeHass(ringing));
   assert.match(html(card), /Someone is at the door/);
   assert.match(html(card), /class="cam ringing"/);
+  assert.match(html(card), /<div class="state ringing">Ringing<\/div>/, "the ringing state stays big");
+  assert.match(html(card), /Last visitor · <b>/);
   const svg = lib.doorbellSvg("dark", "ringing", "ringing");
   assert.match(svg, /class="vib"/);
   assert.match(svg, /class="wv d0"/);
@@ -472,4 +476,17 @@ test("the cards are registered for the card picker", () => {
 test("snapshot URLs are refreshed with a stamp, data URIs are left alone", () => {
   assert.equal(lib.freshUrl("/api/camera_proxy/camera.x?token=a", 5), "/api/camera_proxy/camera.x?token=a&_ts=5");
   assert.equal(lib.freshUrl("data:image/png;base64,AA", 5), "data:image/png;base64,AA");
+});
+
+test("night picture: forced, else the sun below the horizon or the dark theme", () => {
+  const h = (sun, dark) => ({ states: sun ? { "sun.sun": { state: sun } } : {}, themes: { darkMode: dark } });
+  assert.equal(lib.isNight(h("below_horizon", false), {}), true);
+  assert.equal(lib.isNight(h("above_horizon", true), {}), true, "dark theme while the sun is up: night");
+  assert.equal(lib.isNight(h("above_horizon", false), {}), false, "light theme while the sun is up: day");
+  assert.equal(lib.isNight(h("unavailable", true), {}), true, "no usable sun: the dark theme decides");
+  assert.equal(lib.isNight(h(null, false), {}), false);
+  assert.equal(lib.isNight(h("above_horizon", true), { illustration_theme: "day" }), false);
+  assert.equal(lib.isNight(h("above_horizon", false), { illustration_theme: "night" }), true);
+  const card = mount(lib.DoorbellCard, FRONT, { ...makeHass(), themes: { darkMode: true } });
+  assert.match(html(card), /class="db-banner night/);
 });
