@@ -491,7 +491,7 @@ const BASE_STYLE = `
           --db-glass-hover: color-mix(in srgb, var(--primary-text-color) 11%, transparent);
           --db-line: var(--divider-color, rgba(127,127,127,.25)); }
   /* The card follows the width it is given (Sections view columns, mini card): container queries below. */
-  ha-card { overflow: hidden; container-type: inline-size; }
+  ha-card { overflow: hidden; container: db-card / inline-size; }
   /* A size container has no width of its own content: this empty grid gives the card a natural width without a
      minimum, so that it still shrinks to its track in a grid or a flex row. */
   :host { display: block; min-width: 0; --db-natural-width: 400px; }
@@ -515,7 +515,7 @@ const BASE_STYLE = `
   .type-icon { position: relative; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none;
                --db-tint: var(--c, var(--db-accent)); background: color-mix(in srgb, var(--db-tint) 16%, transparent); transition: background-color .3s ease; }
   .type-icon .icon { width: 24px; height: 24px; fill: color-mix(in srgb, var(--db-tint) 70%, var(--primary-text-color)); transition: fill .3s ease; }
-  .titles { flex: 1 1 0; min-width: 5ch; display: flex; flex-direction: column; justify-content: center; min-height: 40px; }
+  .titles { flex: 1 1 0; min-width: 5ch; container: db-titles / inline-size; display: flex; flex-direction: column; justify-content: center; min-height: 40px; }
   .title-row { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 20px; }
   .name { flex: 0 1 auto; min-width: 4ch; font-size: 16px; font-weight: 500; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   :host([hide-title]) .name { visibility: hidden; }
@@ -558,14 +558,19 @@ const BASE_STYLE = `
                         30% { transform: rotate(10deg); } 40% { transform: rotate(-6deg); } }
   @keyframes db-glow { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
-  /* Narrow card: the status pill leaves the title line for a line of its own under the subtitle; very narrow, only
+  /* Narrow card or title block: the status pill leaves the title line for a line of its own under the subtitle; very narrow, only
      its colored dot stays (its text stays in its title and aria-label). */
-  @container (max-width: 260px) {
+  @container db-titles (max-width: 175px) {
     .title-row .chip { display: none; }
     .pill-line { display: flex; min-width: 0; margin-top: 3px; }
     .pill-line .chip { max-width: 100%; }
   }
-  @container (max-width: 200px) {
+  @container db-card (max-width: 260px) {
+    .title-row .chip { display: none; }
+    .pill-line { display: flex; min-width: 0; margin-top: 3px; }
+    .pill-line .chip { max-width: 100%; }
+  }
+  @container db-card (max-width: 200px) {
     .title-row .chip { display: inline-flex; padding: 4px; flex: none; }
     .chip-text, .pill-line { display: none; }
   }
