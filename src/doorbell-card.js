@@ -668,6 +668,105 @@ const MINI_STYLE = `
   }
 `;
 
+// ---------------------------------------------------------------------------
+// Illustrated header: the front of the house (siding wall, roof edge, porch lantern, front door cropped at the top,
+// house number, potted plant) with the card's own doorbell drawn big beside the door, on a 10 px concrete strip
+// edge to edge. The wall is the banner's background, so the title and subtitle sit on it at the left; the scene is
+// a 214 × 80 picture at the right, posed on the strip. `illustration: false` keeps the classic header.
+// ---------------------------------------------------------------------------
+
+let _dbUid = 0;
+
+// Night picture: forced by illustration_theme, else the sun below the horizon, else Home Assistant's dark mode.
+const isNight = (hass, config) => {
+  const theme = config?.illustration_theme;
+  if (theme === "night") return true;
+  if (theme === "day") return false;
+  const sun = hass?.states?.["sun.sun"];
+  if (valid(sun)) return sun.state === "below_horizon";
+  return !!hass?.themes?.darkMode;
+};
+
+// The scene, without the doorbell (an <img> laid over it, see _banner). `uid` keeps each card's ids apart.
+const doorbellScene = (uid, night) => {
+  const n = (day, dark) => (night ? dark : day);
+  const leaf = (d, fill) => `<path d="${d}" fill="${fill}"/>`;
+  return `<svg class="db-scene-svg" viewBox="16 0 214 80" preserveAspectRatio="xMaxYMax meet" aria-hidden="true" focusable="false">
+    <defs><radialGradient id="db-halo-${uid}"><stop offset="0" stop-color="#ffcf6e" stop-opacity=".75"/><stop offset="1" stop-color="#ffcf6e" stop-opacity="0"/></radialGradient></defs>
+    <g class="db-lantern">
+      ${night ? `<circle class="db-halo" cx="30" cy="24" r="22" fill="url(#db-halo-${uid})"/>` : ""}
+      <rect x="28.6" y="5" width="2.8" height="9" fill="#2a3038"/>
+      <path d="M23.5 14h13l-2.4 3.4H25.9z" fill="#2a3038"/>
+      <rect x="25" y="17" width="10" height="14" rx="1.6" fill="#2a3038"/>
+      <rect class="db-lamp" x="26.6" y="18.6" width="6.8" height="10.8" rx="1" fill="${n("#f3e6d3", "#ffcf6e")}"/>
+      <path d="M30 18.6v10.8" stroke="#2a3038" stroke-width=".8"/>
+      <rect x="26" y="31" width="8" height="2" rx=".6" fill="#2a3038"/>
+    </g>
+    <rect x="110" y="0" width="70" height="80" fill="${n("#f6f2ea", "#2a2a33")}"/>
+    <rect x="116" y="0" width="58" height="80" fill="${n("#2f5f8a", "#1f3a5a")}"/>
+    <rect x="123" y="5" width="44" height="22" rx="2" fill="${n("#bfe0f7", "#ffcf6e")}" opacity="${n(1, 0.85)}"/>
+    <path d="M145 5v22M123 16h44" stroke="${n("#2f5f8a", "#1f3a5a")}" stroke-width="1.6"/>
+    <rect x="123" y="35" width="44" height="17" rx="1.5" fill="none" stroke="#000" stroke-opacity=".2"/>
+    <rect x="123" y="56" width="44" height="17" rx="1.5" fill="none" stroke="#000" stroke-opacity=".2"/>
+    <rect x="119" y="40" width="3" height="11" rx="1.5" fill="#d4b26a"/><rect x="119" y="42" width="8" height="2.4" rx="1.2" fill="#d4b26a"/>
+    <rect x="104" y="76.5" width="82" height="3.5" fill="${n("#b4b2a9", "#4a4a55")}"/>
+    <rect x="40" y="10" width="17" height="13" rx="2" fill="${n("#fff", "#55617a")}" stroke="#9aa3ae" stroke-width=".6"/>
+    <text x="48.5" y="19.6" text-anchor="middle" font-size="8.5" font-weight="700" font-family="sans-serif" fill="${n("#2f5f8a", "#dfe7f2")}">12</text>
+    <g class="db-plant">
+      ${leaf("M212 64C204 60 197 52 198 44c7 2 12 10 14 20z", n("#4a9a33", "#33593e"))}
+      ${leaf("M212 64c8-4 15-12 14-20-7 2-12 10-14 20z", n("#4a9a33", "#33593e"))}
+      ${leaf("M212 64c-5-8-6-20 0-28 6 8 5 20 0 28z", n("#5aa83d", "#3e6a4a"))}
+      ${leaf("M212 64c-9-1-16-6-18-12 7-1 14 4 18 12zM212 64c9-1 16-6 18-12-7-1-14 4-18 12z", n("#6cbb4c", "#467653"))}
+      <rect x="199" y="62" width="26" height="4" rx="1" fill="#a94f2e"/>
+      <path d="M200.5 66h23l-2.4 14h-18.2z" fill="#c0603a"/>
+    </g>
+  </svg>`;
+};
+
+const BANNER_STYLE = `
+  /* The banner: the house's wall (siding, roof edge at the top), the scene at the right, a 10 px concrete strip. */
+  .db-banner { --db-sw: min(214px, 50cqw); position: relative; overflow: hidden; height: 90px; color: #2d2620;
+               background: repeating-linear-gradient(180deg, transparent 0 7px, #dccab2 7px 8px) 0 4px / 100% 100%, #e9dccb; }
+  .db-banner.night { color: #fff; background: repeating-linear-gradient(180deg, transparent 0 7px, #3c3844 7px 8px) 0 4px / 100% 100%, #33303a; }
+  .db-banner::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: #a0503a; }
+  .db-banner.night::before { background: #3a2a2a; }
+  .db-banner::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 10px; background: #9aa1a9; box-shadow: inset 0 2px 0 #b5bbc2; }
+  .db-banner.night::after { background: #2c323b; box-shadow: inset 0 2px 0 #3a414b; }
+  .db-scene { position: absolute; right: 0; bottom: 10px; width: var(--db-sw); aspect-ratio: 214 / 80; }
+  .db-scene-svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  /* The doorbell at x 44, y 5, 44 × 70 of the 214 × 80 scene. */
+  .db-device { position: absolute; left: 20.56%; top: 6.25%; width: 20.56%; height: 87.5%; display: flex; }
+  .db-device img { width: 100%; height: 100%; object-fit: contain; object-position: 50% 100%; filter: drop-shadow(0 2px 3px rgba(0,0,0,.22)); }
+  .db-banner.night .db-device img { filter: drop-shadow(0 0 6px rgba(255,207,110,.25)) drop-shadow(0 2px 3px rgba(0,0,0,.4)); }
+  /* While it rings, the porch lantern blinks in the accent color. */
+  .db-banner.ring .db-lamp { animation: db-lamp 1s ease-in-out infinite; }
+  @keyframes db-lamp { 50% { fill: #ffb74d; } }
+  .db-text { position: absolute; left: 12px; top: 5px; bottom: 10px; right: calc(var(--db-sw) + 4px); display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .db-text .titles { min-height: 0; gap: 3px; }
+  .db-text .state-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .db-text .chip { max-width: 100%; flex: 0 1 auto; }
+  .db-text .sub { flex: 1 1 0; min-width: 0; }
+  .db-text .name { flex: none; font-weight: 600; }
+  .db-text .sub { color: #6b5a48; }
+  .db-banner.night .db-text .sub { color: rgba(255,255,255,.78); }
+  /* The round icon on the wall: its color is the state's (gray when idle). */
+  .db-banner .type-icon { background: rgba(255,255,255,.66); box-shadow: inset 0 0 0 1px rgba(45,38,32,.12); }
+  .db-banner .type-icon .icon { fill: color-mix(in srgb, var(--db-tint) 82%, #000); }
+  .db-banner.night .type-icon { background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
+  .db-banner.night .type-icon .icon { fill: color-mix(in srgb, var(--db-tint) 78%, #fff); }
+  .db-banner .chip { background: rgba(255,255,255,.72); color: color-mix(in srgb, var(--c) 60%, #2d2620); }
+  .db-banner.night .chip { background: rgba(20,18,26,.55); color: color-mix(in srgb, var(--c) 45%, #fff); }
+  .db-banner .zoom { position: absolute; top: 8px; right: 6px; margin: 0; color: #2d2620; background: rgba(255,255,255,.6); }
+  .db-banner.night .zoom { color: #fff; background: rgba(20,18,26,.5); }
+  .db-banner .zoom:hover { background: rgba(255,255,255,.85); }
+  .db-banner.night .zoom:hover { background: rgba(20,18,26,.75); }
+  /* Narrow card: no room for the scene beside the text, the wall alone stays. */
+  @container (max-width: 300px) { .db-scene { display: none; } .db-text { right: 36px; } }
+  /* The chip has a line of its own on the banner: it keeps its text on a narrow card. */
+  @container (max-width: 250px) { .db-banner .chip { padding: 1px 8px; flex: 0 1 auto; } .db-banner .chip-text { display: block; } }
+  @media (prefers-reduced-motion: reduce) { .db-banner .db-lamp { animation: none; } }
+`;
+
 // Element names of Home Assistant dialogs (the more-info opened from the card, among others).
 const DIALOG_TAGS = new Set(["HA-MORE-INFO-DIALOG", "HA-DIALOG", "DIALOG"]);
 const isOutside = (card, ev) => {
@@ -724,6 +823,7 @@ class DoorbellBase extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: "open" });
+    this._uid = ++_dbUid;
     this._html = "";
     this._captures = [];
     this._stamp = 0;
@@ -800,6 +900,7 @@ class DoorbellBase extends HTMLElement {
       h.language,
       h.locale,
       h.themes?.darkMode,
+      h.states["sun.sun"],
       this._history,
       this._captures.length,
       this._ringing(dev),
@@ -1104,20 +1205,64 @@ class DoorbellBase extends HTMLElement {
     return [dev.brand || dev.integration, dev.model].filter(Boolean).join(" · ");
   }
 
+  // The illustrated header (the default), else the classic one (`illustration: false`).
+  _illustrated() {
+    return this._config.illustration !== false;
+  }
+
   _header(dev, status, sub) {
-    const c = this._config;
+    if (this._illustrated()) return this._banner(dev, status, sub);
     return `
       <div class="header">
-        <span class="type-icon ${status.cls}">${svgIcon(status.key === "ringing" ? ICONS.bell_ring : ICONS.doorbell)}</span>
-        <div class="titles">
+        ${this._headIcon(status)}
+        ${this._titles(dev, status, sub, this._zoomButton())}
+      </div>`;
+  }
+
+  // The round icon: its color always follows the state (gray when idle, the accent while ringing, blue on a
+  // detection, amber when the door is unlocked, red when offline).
+  _headIcon(status) {
+    const cls = status.key === "idle" ? "idle" : status.cls;
+    return `<span class="type-icon ${cls}">${svgIcon(status.key === "ringing" ? ICONS.bell_ring : ICONS.doorbell)}</span>`;
+  }
+
+  _chip(status) {
+    return `<span class="chip clickable ${status.cls}" role="button" tabindex="0" data-entity="${esc(status.entity || "")}" title="${esc(status.text)}" aria-label="${esc(status.text)}"><span class="dot"></span><span class="chip-text">${esc(status.text)}</span></span>`;
+  }
+
+  _titles(dev, status, sub, zoom) {
+    return `<div class="titles">
           <div class="title-row">
-            <div class="name">${esc(c.title || dev.name)}</div>
-            <span class="chip clickable ${status.cls}" role="button" tabindex="0" data-entity="${esc(status.entity || "")}" title="${esc(status.text)}" aria-label="${esc(status.text)}"><span class="dot"></span><span class="chip-text">${esc(status.text)}</span></span>
-            ${this._zoomButton()}
+            <div class="name">${esc(this._config.title || dev.name)}</div>
+            ${this._chip(status)}
+            ${zoom}
           </div>
           ${sub ? `<div class="sub">${esc(sub)}</div>` : ""}
-        </div>
+        </div>`;
+  }
+
+  // The front of the house, the doorbell big beside the door (the card's own picture, animated by the state), the
+  // title on the wall at the left. Night: by the sun, else the dark theme, or forced by `illustration_theme`.
+  _banner(dev, status, sub) {
+    const night = isNight(this._hass, this._config);
+    const src = this._pictureSrc(dev, status);
+    const target = dev.roles.doorbell || dev.roles.camera || "";
+    const device = src
+      ? `<div class="db-device clickable" role="button" tabindex="0" data-entity="${esc(target)}" aria-label="${esc(this._config.title || dev.name)}">${imgTag(src, 'alt=""')}</div>`
+      : "";
+    return `
+      <div class="db-banner${night ? " night" : ""}${status.key === "ringing" ? " ring" : ""}">
+        <div class="db-scene">${doorbellScene(this._uid, night)}${device}</div>
+        <div class="db-text">${this._headIcon(status)}<div class="titles">
+          <div class="name">${esc(this._config.title || dev.name)}</div>
+          <div class="state-row">${this._chip(status)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</div>
+        </div></div>
+        ${this._zoomButton()}
       </div>`;
+  }
+
+  _styles() {
+    return this._illustrated() ? BANNER_STYLE : "";
   }
 
   _zoomButton() {
@@ -1126,12 +1271,19 @@ class DoorbellBase extends HTMLElement {
 
   // Drawn doorbell (`image: auto`), colored by the state and animated while it rings or sees someone; `none`, or
   // the URL of a picture of your own.
-  _picture(dev, status) {
+  _pictureSrc(dev, status) {
     const img = this._config.image ?? "auto";
     if (img === "none") return "";
     const anim = status.key === "ringing" ? "ringing" : status.key === "motion" || status.key === "person" ? status.key : "";
     const finish = FINISHES[this._config.color] ? this._config.color : BRAND_FINISH[dev.platform] || "dark";
-    const src = img === "auto" ? pictureUri(finish, status.cls, anim) : img;
+    return img === "auto" ? pictureUri(finish, status.cls, anim) : img;
+  }
+
+  // Below the classic header only: the illustrated header already shows the doorbell.
+  _picture(dev, status) {
+    if (this._illustrated()) return "";
+    const src = this._pictureSrc(dev, status);
+    if (!src) return "";
     const target = dev.roles.doorbell || dev.roles.camera || "";
     return `<div class="picture clickable" role="button" tabindex="0" data-entity="${esc(target)}" aria-label="${esc(this._config.title || dev.name)}">${imgTag(src, 'alt=""')}</div>`;
   }
@@ -1500,7 +1652,7 @@ class DoorbellCard extends DoorbellBase {
     if (actions) parts.push(`<div class="actions">${actions}</div>`);
     if (c.show_details !== false) parts.push(this._details(dev));
     if (c.show_history !== false && dev.roles.doorbell) parts.push(this._historySection(dev));
-    return `<style>${BASE_STYLE}${FULL_STYLE}</style>
+    return `<style>${BASE_STYLE}${FULL_STYLE}${this._styles()}</style>
       <ha-card>
         ${this._header(dev, status, this._subtitle(dev))}
         <div class="content">${parts.filter(Boolean).join("")}</div>
@@ -1681,7 +1833,7 @@ class DoorbellMiniCard extends DoorbellCard {
     const main = last ? `${this._t("last_visitor")} ${clock(l, last.ms)}` : this._t("no_visitor");
     const sub = last ? `${dayLabel(this._hass, this._config, last.ms)} · ${ago(l, last.ms)}` : this._subtitle(dev);
     const controls = this._actionButtons(dev, true);
-    return `<style>${BASE_STYLE}${MINI_STYLE}</style>
+    return `<style>${BASE_STYLE}${MINI_STYLE}${this._styles()}</style>
       <ha-card>
         ${this._header(dev, status, "")}
         <div class="content">
@@ -1745,6 +1897,7 @@ class DoorbellEditorBase extends HTMLElement {
         selector: { select: { mode: "dropdown", custom_value: true, options: ["auto", "none"].map((v) => ({ value: v, label: tr(`image_${v}`) })) } },
       },
       { name: "color", selector: { select: { mode: "dropdown", options: ["auto", "dark", "white", "steel"].map((v) => ({ value: v, label: tr(`color_${v}`) })) } } },
+      { name: "illustration_theme", selector: { select: { mode: "dropdown", options: ["auto", "day", "night"].map((v) => ({ value: v, label: tr(`theme_${v}`) })) } } },
       { type: "grid", name: "", schema: this.constructor.toggles.map(([name]) => ({ name, selector: { boolean: {} } })) },
     ];
     if (full) {
@@ -1781,7 +1934,7 @@ class DoorbellEditorBase extends HTMLElement {
   _render() {
     if (!this._hass || !this._config) return;
     const toggles = this.constructor.toggles;
-    const defaults = { ...Object.fromEntries(toggles), image: "auto", color: "auto", camera_view: "snapshot", collapsed: DEFAULT_COLLAPSED, history_count: DEFAULT_HISTORY_COUNT, history_hours: DEFAULT_HISTORY_HOURS, ring_duration: DEFAULT_RING_SECONDS, refresh_interval: DEFAULT_REFRESH };
+    const defaults = { ...Object.fromEntries(toggles), image: "auto", color: "auto", illustration_theme: "auto", camera_view: "snapshot", collapsed: DEFAULT_COLLAPSED, history_count: DEFAULT_HISTORY_COUNT, history_hours: DEFAULT_HISTORY_HOURS, ring_duration: DEFAULT_RING_SECONDS, refresh_interval: DEFAULT_REFRESH };
     if (!this._form) {
       this._form = document.createElement("ha-form");
       this._form.computeLabel = (s) => t(this._hass, this._config, `opt_${s.name}`);
@@ -1826,6 +1979,7 @@ class DoorbellCardEditor extends DoorbellEditorBase {
 
   static get toggles() {
     return [
+      ["illustration", true],
       ["show_title", true],
       ["show_subtitle", true],
       ["show_camera", true],

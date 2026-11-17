@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.0 - 2026-11-17
+
+### Features
+- Illustrated header on both cards (90 px): the front of the house (siding wall, roof edge, porch lantern, front door, house number, potted plant) on a 10 px concrete strip, with the card's own doorbell drawn big beside the door, in its finish and animated by its state (vibrating with sound waves while it rings, radar on motion, detection frame on a person); the porch lantern blinks while it rings. The title, the status chip and the subtitle sit on the wall at the left.
+- Night picture (dark wall, lit lantern and door glass) while the sun is below the horizon, else with the dark theme; `illustration_theme: day | night` forces it, `illustration: false` keeps the classic header. Both options are in the visual editors, in every language.
+- The header icon's color always follows the state: gray when idle, the accent while ringing, blue on a detection, amber when the door is unlocked, red when offline.
+
 ## 1.0.2 - 2026-11-14
 
 ### Fixes
