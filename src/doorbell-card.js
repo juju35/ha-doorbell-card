@@ -517,7 +517,7 @@ const BASE_STYLE = `
   .type-icon .icon { width: 24px; height: 24px; fill: color-mix(in srgb, var(--db-tint) 70%, var(--primary-text-color)); transition: fill .3s ease; }
   .titles { flex: 1 1 0; min-width: 5ch; container: db-titles / inline-size; display: flex; flex-direction: column; justify-content: center; min-height: 40px; }
   .title-row { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 20px; }
-  .name { flex: 0 1 auto; min-width: 4ch; font-size: 16px; font-weight: 500; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .name { flex: 0 1 auto; min-width: 0; font-size: 16px; font-weight: 500; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   :host([hide-title]) .name { visibility: hidden; }
   :host([hide-subtitle]) .sub { display: none; }
   .sub { font-size: 12px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -542,9 +542,14 @@ const BASE_STYLE = `
   .zoom .icon { width: 16px; height: 16px; }
   .zoom:hover { background: var(--db-glass-hover); color: var(--primary-text-color); }
   .header:has(.zoom) { padding-right: 34px; }
-  .pill-line { display: none; }
-  /* The pill keeps its whole label: the title gives way first, down to 4 characters. */
-  .title-row .chip { flex: none; }
+  /* The status pill sits on the title line, right after the title, when the whole title and its whole label fit
+     there; otherwise it goes on its own line under the subtitle (kept to one line), and when even that is too tight
+     only its dot is left (its text stays in its title and aria-label). Decided by measure (see _fitPill). */
+  .title-row .chip { flex: none; max-width: none; }
+  .titles.pill-below .title-row { display: contents; }
+  .titles.pill-below .name { max-width: 100%; }
+  .titles.pill-below .title-row .chip { order: 3; align-self: flex-start; margin-top: 3px; max-width: 100%; }
+  .titles.pill-dot .chip { padding: 4px; } .titles.pill-dot .chip-text { display: none; }
   .thumb { flex: none; border-radius: 8px; overflow: hidden; background: color-mix(in srgb, var(--primary-text-color) 8%, transparent);
            display: flex; align-items: center; justify-content: center; color: var(--secondary-text-color); }
   .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -558,21 +563,10 @@ const BASE_STYLE = `
                         30% { transform: rotate(10deg); } 40% { transform: rotate(-6deg); } }
   @keyframes db-glow { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
-  /* Narrow card or title block: the status pill leaves the title line for a line of its own under the subtitle; very narrow, only
-     its colored dot stays (its text stays in its title and aria-label). */
-  @container db-titles (max-width: 175px) {
-    .title-row .chip { display: none; }
-    .pill-line { display: flex; min-width: 0; margin-top: 3px; }
-    .pill-line .chip { max-width: 100%; }
-  }
-  @container db-card (max-width: 260px) {
-    .title-row .chip { display: none; }
-    .pill-line { display: flex; min-width: 0; margin-top: 3px; }
-    .pill-line .chip { max-width: 100%; }
-  }
+  /* Very narrow card: only the pill's colored dot stays (its text stays in its title and aria-label). */
   @container db-card (max-width: 200px) {
-    .title-row .chip { display: inline-flex; padding: 4px; flex: none; }
-    .chip-text, .pill-line { display: none; }
+    .title-row .chip { padding: 4px; flex: none; }
+    .chip-text { display: none; }
   }
 `;
 
@@ -695,6 +689,14 @@ const MINI_STYLE = `
 let _dbUid = 0;
 
 // Night picture: forced by illustration_theme, else the sun below the horizon or Home Assistant's dark theme.
+// The width of an element's whole text in fractional pixels, even while it is cut with an ellipsis (0 when hidden).
+const textWidth = (el) => {
+  if (!el?.getClientRects?.().length || typeof document.createRange !== "function") return 0;
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  return range.getBoundingClientRect().width;
+};
+
 const isNight = (hass, config) => {
   const theme = config?.illustration_theme;
   if (theme === "night") return true;
@@ -932,6 +934,18 @@ class DoorbellBase extends HTMLElement {
       },
     );
     this._outside.on();
+    // A new width (or the web font loaded): the status pill is fitted again, in the next frame.
+    if (typeof ResizeObserver === "function") {
+      this._pillResize ??= new ResizeObserver((entries) => {
+        const w = Math.round(entries.at(-1).contentRect.width);
+        if (w === this._pillWidth) return;
+        this._pillWidth = w;
+        cancelAnimationFrame(this._pillFrame);
+        this._pillFrame = requestAnimationFrame(() => this._fitPill());
+      });
+      this._pillResize.observe(this);
+    }
+    document.fonts?.ready?.then(() => this._fitPill());
     if (this._popup) window.addEventListener("keydown", this._onKey);
     this._onVisibility ??= () => this._syncCamera();
     document.addEventListener("visibilitychange", this._onVisibility);
@@ -957,6 +971,8 @@ class DoorbellBase extends HTMLElement {
   }
 
   disconnectedCallback() {
+    this._pillResize?.disconnect();
+    this._pillWidth = null;
     this._pressing = this._dirty = false;
     window.removeEventListener("pointerup", this._onPressEnd, true);
     window.removeEventListener("pointercancel", this._onPressEnd, true);
@@ -1167,6 +1183,39 @@ class DoorbellBase extends HTMLElement {
 
   // ---- Rendering ---------------------------------------------------------
 
+  // The status pill goes on the title row, right after the title, only when the whole title and the pill's whole
+  // label fit there; otherwise it takes its own line under the subtitle (.pill-below) and the title keeps its row
+  // (cut only when it does not fit alone). The subtitle then keeps one line (its whole text in its tooltip), and when
+  // the block still runs out of the banner or into its ground strip, or the label does not fit its own line, the pill
+  // keeps its dot alone (.pill-dot, the label in its tooltip and aria-label). Measured after each render and on each
+  // new width, never by a fixed width, so that every language fits.
+  _fitPill() {
+    for (const t of this.shadowRoot?.querySelectorAll?.(".titles") || []) {
+      const chips = [...t.querySelectorAll(".chip")];
+      if (!chips[0]?.getBoundingClientRect) continue;
+      t.classList.remove("pill-below", "pill-dot");
+      const sub = t.querySelector(".sub");
+      sub?.removeAttribute("title");
+      if (!chips[0].querySelector(".chip-text")?.getClientRects().length) continue;
+      const avail = t.getBoundingClientRect().width;
+      const gap = parseFloat(getComputedStyle(chips[0].parentElement).columnGap) || 0;
+      const widths = chips.map((c) => {
+        const cs = getComputedStyle(c);
+        return c.getBoundingClientRect().width + (parseFloat(cs.marginLeft) || 0) + (parseFloat(cs.marginRight) || 0);
+      });
+      if (textWidth(t.querySelector(".name")) + widths.reduce((w, c) => w + gap + c, 0) <= avail + 0.01) continue;
+      t.classList.add("pill-below");
+      if (sub && sub.scrollWidth > sub.clientWidth) sub.title = sub.textContent.trim();
+      const banner = t.closest(".db-banner");
+      const box = banner?.getBoundingClientRect();
+      const floor = box && box.bottom - 10; // the 10 px strip (.db-banner::after)
+      const r = t.getBoundingClientRect();
+      const out = box && (r.top < box.top - 0.5 || r.bottom > floor + 0.5);
+      const room = avail;
+      if (out || widths.some((w) => w > room + 0.01)) t.classList.add("pill-dot");
+    }
+  }
+
   _update() {
     if (!this._hass || !this._config) return;
     // Held back under a press (see the constructor): drawn once released.
@@ -1182,6 +1231,7 @@ class DoorbellBase extends HTMLElement {
       const kept = this._popup || this._byPointer ? null : this._focusedSpot();
       this._html = html;
       this.shadowRoot.innerHTML = html;
+      this._fitPill();
       this._placeImages();
       this._placeCamera();
       if (kept) this._restoreFocus(kept);
@@ -1242,8 +1292,8 @@ class DoorbellBase extends HTMLElement {
     return status.key === "idle" ? "idle" : status.cls;
   }
 
-  // The status pill: on the title line, right after the title; on a narrow card (≤ 260 px) it takes a line of its
-  // own under the subtitle (the copy in .pill-line), and at ≤ 200 px only its dot stays (text in title/aria-label).
+  // The status pill: on the title line, right after the title, or on a line of its own under the subtitle (see
+  // _fitPill); at ≤ 200 px only its dot stays (text in title/aria-label).
   _chip(status) {
     return `<span class="chip clickable ${this._stateCls(status)}" role="button" tabindex="0" data-entity="${esc(status.entity || "")}" title="${esc(status.text)}" aria-label="${esc(status.text)}"><span class="dot"></span><span class="chip-text">${esc(status.text)}</span></span>`;
   }
@@ -1255,7 +1305,6 @@ class DoorbellBase extends HTMLElement {
             ${this._chip(status)}
           </div>
           ${sub ? `<div class="sub">${esc(sub)}</div>` : ""}
-          <div class="pill-line">${this._chip(status)}</div>
         </div>`;
   }
 
