@@ -192,7 +192,8 @@ test("the full card shows the picture, the camera, the last visitor, the actions
   assert.match(h, /data-action="mute"/);
   assert.match(h, /Recent rings/);
   assert.equal((h.match(/class="hist-row"/g) || []).length, 4);
-  assert.match(h, /class="chip clickable ok"/);
+  assert.match(h, /class="title-row">\s*<div class="name">[^<]*<\/div>\s*<span class="chip clickable idle"/, "status pill right after the title, gray when idle");
+  assert.match(h, /class="pill-line"><span class="chip clickable idle"/, "its own line under the subtitle on a narrow card");
   // Details folded by default, history unfolded: chevrons follow.
   assert.match(h, /data-section="details" aria-expanded="false"/);
   assert.match(h, /data-section="history" aria-expanded="true"/);

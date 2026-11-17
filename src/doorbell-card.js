@@ -507,17 +507,17 @@ const BASE_STYLE = `
   .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c, var(--db-ok)); flex: none; display: inline-block; }
   .chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; white-space: nowrap;
           background: color-mix(in srgb, var(--c, var(--db-ok)) 15%, transparent); color: color-mix(in srgb, var(--c, var(--db-ok)) 55%, var(--primary-text-color));
-          flex: 0 1 auto; min-width: 0; max-width: 50%; overflow: hidden; box-sizing: border-box; }
+          flex: 0 1 auto; min-width: 0; max-width: 51%; overflow: hidden; box-sizing: border-box; }
   .chip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   /* Header: the 40 px icon, then the title line (name, status chip, detail button) above the subtitle, so that the
      chip always sits on the line of the title. */
-  .header { display: flex; align-items: flex-start; gap: 10px; padding: 12px 12px 0; }
+  .header { position: relative; display: flex; align-items: flex-start; gap: 10px; padding: 12px 12px 0; }
   .type-icon { position: relative; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: none;
                --db-tint: var(--c, var(--db-accent)); background: color-mix(in srgb, var(--db-tint) 16%, transparent); transition: background-color .3s ease; }
   .type-icon .icon { width: 24px; height: 24px; fill: color-mix(in srgb, var(--db-tint) 70%, var(--primary-text-color)); transition: fill .3s ease; }
   .titles { flex: 1 1 0; min-width: 5ch; display: flex; flex-direction: column; justify-content: center; min-height: 40px; }
   .title-row { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 20px; }
-  .name { flex: 1 1 0; min-width: 4ch; font-size: 16px; font-weight: 500; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .name { flex: 0 1 auto; min-width: 4ch; font-size: 16px; font-weight: 500; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   :host([hide-title]) .name { visibility: hidden; }
   :host([hide-subtitle]) .sub { display: none; }
   .sub { font-size: 12px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -536,10 +536,15 @@ const BASE_STYLE = `
   .btn.disabled { opacity: .45; cursor: default; }
   .btn.busy { cursor: progress; }
   .btn.busy .icon { animation: db-glow 1s ease-in-out infinite; }
-  .zoom { all: unset; flex: none; cursor: pointer; width: 24px; height: 24px; margin: -2px -4px -2px 0; border-radius: 50%;
-          display: grid; place-items: center; color: var(--secondary-text-color); }
+  /* The detail button of the mini card: a 24 px round button in the top right corner. */
+  .zoom { all: unset; position: absolute; z-index: 2; top: 5px; right: 5px; cursor: pointer; width: 24px; height: 24px; border-radius: 50%;
+          display: grid; place-items: center; color: var(--secondary-text-color); box-shadow: inset 0 0 0 1px var(--divider-color, rgba(127,127,127,.3)); }
   .zoom .icon { width: 16px; height: 16px; }
   .zoom:hover { background: var(--db-glass-hover); color: var(--primary-text-color); }
+  .header:has(.zoom) { padding-right: 34px; }
+  .pill-line { display: none; }
+  /* The pill keeps its whole label: the title gives way first, down to 4 characters. */
+  .title-row .chip { flex: none; }
   .thumb { flex: none; border-radius: 8px; overflow: hidden; background: color-mix(in srgb, var(--primary-text-color) 8%, transparent);
            display: flex; align-items: center; justify-content: center; color: var(--secondary-text-color); }
   .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -553,10 +558,16 @@ const BASE_STYLE = `
                         30% { transform: rotate(10deg); } 40% { transform: rotate(-6deg); } }
   @keyframes db-glow { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
   @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; animation: none !important; } }
-  /* Narrow card: the status chip keeps only its colored dot (its text stays in its title and aria-label). */
-  @container (max-width: 250px) {
-    .chip { padding: 4px; flex: none; }
-    .chip-text { display: none; }
+  /* Narrow card: the status pill leaves the title line for a line of its own under the subtitle; very narrow, only
+     its colored dot stays (its text stays in its title and aria-label). */
+  @container (max-width: 260px) {
+    .title-row .chip { display: none; }
+    .pill-line { display: flex; min-width: 0; margin-top: 3px; }
+    .pill-line .chip { max-width: 100%; }
+  }
+  @container (max-width: 200px) {
+    .title-row .chip { display: inline-flex; padding: 4px; flex: none; }
+    .chip-text, .pill-line { display: none; }
   }
 `;
 
@@ -725,7 +736,7 @@ const doorbellScene = (uid, night) => {
 
 const BANNER_STYLE = `
   /* The banner: the house's wall (siding, roof edge at the top), the scene at the right, a 10 px concrete strip. */
-  .db-banner { --db-sw: min(214px, 50cqw); position: relative; overflow: hidden; height: 90px; color: #2d2620;
+  .db-banner { --db-sw: min(214px, 44cqw); position: relative; overflow: hidden; height: 90px; color: #2d2620;
                background: repeating-linear-gradient(180deg, transparent 0 7px, #dccab2 7px 8px) 0 4px / 100% 100%, #e9dccb; }
   .db-banner.night { color: #fff; background: repeating-linear-gradient(180deg, transparent 0 7px, #3c3844 7px 8px) 0 4px / 100% 100%, #33303a; }
   .db-banner::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 5px; background: #a0503a; }
@@ -742,11 +753,8 @@ const BANNER_STYLE = `
   .db-banner.ring .db-lamp { animation: db-lamp 1s ease-in-out infinite; }
   @keyframes db-lamp { 50% { fill: #ffb74d; } }
   .db-text { position: absolute; left: 12px; top: 5px; bottom: 10px; right: calc(var(--db-sw) + 4px); display: flex; align-items: center; gap: 10px; min-width: 0; }
-  .db-text .titles { min-height: 0; gap: 3px; }
-  .db-text .state-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
-  .db-text .chip { max-width: 100%; flex: 0 1 auto; }
-  .db-text .sub { flex: 1 1 0; min-width: 0; }
-  .db-text .name { flex: none; font-weight: 600; }
+  .db-text .titles { min-height: 0; gap: 2px; }
+  .db-text .name { font-weight: 600; }
   .db-text .sub { color: #6b5a48; }
   .db-banner.night .db-text .sub { color: rgba(255,255,255,.78); }
   /* The round icon on the wall: its color is the state's (gray when idle). */
@@ -754,16 +762,15 @@ const BANNER_STYLE = `
   .db-banner .type-icon .icon { fill: color-mix(in srgb, var(--db-tint) 82%, #000); }
   .db-banner.night .type-icon { background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.14); }
   .db-banner.night .type-icon .icon { fill: color-mix(in srgb, var(--db-tint) 78%, #fff); }
-  .db-banner .chip { background: rgba(255,255,255,.72); color: color-mix(in srgb, var(--c) 60%, #2d2620); }
-  .db-banner.night .chip { background: rgba(20,18,26,.55); color: color-mix(in srgb, var(--c) 45%, #fff); }
-  .db-banner .zoom { position: absolute; top: 8px; right: 6px; margin: 0; color: #2d2620; background: rgba(255,255,255,.6); }
-  .db-banner.night .zoom { color: #fff; background: rgba(20,18,26,.5); }
-  .db-banner .zoom:hover { background: rgba(255,255,255,.85); }
-  .db-banner.night .zoom:hover { background: rgba(20,18,26,.75); }
+  .db-banner .chip { background: color-mix(in srgb, var(--c) 18%, rgba(255,255,255,.78)); color: color-mix(in srgb, var(--c) 45%, #0d2a45); }
+  .db-banner.night .chip { background: color-mix(in srgb, var(--c) 30%, rgba(8,18,38,.55)); color: color-mix(in srgb, var(--c) 35%, #ffffff); }
+  .db-banner .zoom { color: #33506b; background: rgba(255,255,255,.55); box-shadow: inset 0 0 0 1px rgba(255,255,255,.7);
+                     -webkit-backdrop-filter: blur(4px); backdrop-filter: blur(4px); }
+  .db-banner.night .zoom { color: #fff; background: rgba(255,255,255,.12); box-shadow: inset 0 0 0 1px rgba(255,255,255,.2); }
+  .db-banner .zoom:hover { background: rgba(255,255,255,.75); }
+  .db-banner.night .zoom:hover { background: rgba(255,255,255,.22); }
   /* Narrow card: no room for the scene beside the text, the wall alone stays. */
   @container (max-width: 300px) { .db-scene { display: none; } .db-text { right: 36px; } }
-  /* The chip has a line of its own on the banner: it keeps its text on a narrow card. */
-  @container (max-width: 250px) { .db-banner .chip { padding: 1px 8px; flex: 0 1 auto; } .db-banner .chip-text { display: block; } }
   @media (prefers-reduced-motion: reduce) { .db-banner .db-lamp { animation: none; } }
 `;
 
@@ -1215,29 +1222,36 @@ class DoorbellBase extends HTMLElement {
     return `
       <div class="header">
         ${this._headIcon(status)}
-        ${this._titles(dev, status, sub, this._zoomButton())}
+        ${this._titles(dev, status, sub)}
+        ${this._zoomButton()}
       </div>`;
   }
 
   // The round icon: its color always follows the state (gray when idle, the accent while ringing, blue on a
   // detection, amber when the door is unlocked, red when offline).
   _headIcon(status) {
-    const cls = status.key === "idle" ? "idle" : status.cls;
-    return `<span class="type-icon ${cls}">${svgIcon(status.key === "ringing" ? ICONS.bell_ring : ICONS.doorbell)}</span>`;
+    return `<span class="type-icon ${this._stateCls(status)}">${svgIcon(status.key === "ringing" ? ICONS.bell_ring : ICONS.doorbell)}</span>`;
   }
 
+  // The color of the round icon and of the status pill: gray when idle, else the state's.
+  _stateCls(status) {
+    return status.key === "idle" ? "idle" : status.cls;
+  }
+
+  // The status pill: on the title line, right after the title; on a narrow card (≤ 260 px) it takes a line of its
+  // own under the subtitle (the copy in .pill-line), and at ≤ 200 px only its dot stays (text in title/aria-label).
   _chip(status) {
-    return `<span class="chip clickable ${status.cls}" role="button" tabindex="0" data-entity="${esc(status.entity || "")}" title="${esc(status.text)}" aria-label="${esc(status.text)}"><span class="dot"></span><span class="chip-text">${esc(status.text)}</span></span>`;
+    return `<span class="chip clickable ${this._stateCls(status)}" role="button" tabindex="0" data-entity="${esc(status.entity || "")}" title="${esc(status.text)}" aria-label="${esc(status.text)}"><span class="dot"></span><span class="chip-text">${esc(status.text)}</span></span>`;
   }
 
-  _titles(dev, status, sub, zoom) {
+  _titles(dev, status, sub) {
     return `<div class="titles">
           <div class="title-row">
             <div class="name">${esc(this._config.title || dev.name)}</div>
             ${this._chip(status)}
-            ${zoom}
           </div>
           ${sub ? `<div class="sub">${esc(sub)}</div>` : ""}
+          <div class="pill-line">${this._chip(status)}</div>
         </div>`;
   }
 
@@ -1253,10 +1267,7 @@ class DoorbellBase extends HTMLElement {
     return `
       <div class="db-banner${night ? " night" : ""}${status.key === "ringing" ? " ring" : ""}">
         <div class="db-scene">${doorbellScene(this._uid, night)}${device}</div>
-        <div class="db-text">${this._headIcon(status)}<div class="titles">
-          <div class="name">${esc(this._config.title || dev.name)}</div>
-          <div class="state-row">${this._chip(status)}${sub ? `<span class="sub">${esc(sub)}</span>` : ""}</div>
-        </div></div>
+        <div class="db-text">${this._headIcon(status)}${this._titles(dev, status, sub)}</div>
         ${this._zoomButton()}
       </div>`;
   }
