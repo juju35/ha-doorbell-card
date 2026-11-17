@@ -92,7 +92,7 @@ export const load = ({ now } = {}) => {
   vm.createContext(sandbox);
   return vm.runInContext(
     `${source}
-    ({ STRINGS, LANGUAGES, resolve, findDevice, listDevices, ringsFromHistory, lang, intlLocale, ago, dayLabel, pictureUri, doorbellSvg, esc, freshUrl,
+    ({ STRINGS, LANGUAGES, resolve, findDevice, listDevices, ringsFromHistory, lang, intlLocale, ago, dayLabel, pictureUri, doorbellSvg, esc, freshUrl, isNight,
        DoorbellCard: customElements.get("doorbell-card"), DoorbellMiniCard: customElements.get("doorbell-mini-card"),
        DoorbellCardEditor: customElements.get("doorbell-card-editor"), DoorbellMiniCardEditor: customElements.get("doorbell-mini-card-editor"), window })`,
     sandbox,

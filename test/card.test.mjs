@@ -474,3 +474,16 @@ test("snapshot URLs are refreshed with a stamp, data URIs are left alone", () =>
   assert.equal(lib.freshUrl("/api/camera_proxy/camera.x?token=a", 5), "/api/camera_proxy/camera.x?token=a&_ts=5");
   assert.equal(lib.freshUrl("data:image/png;base64,AA", 5), "data:image/png;base64,AA");
 });
+
+test("night picture: forced, else the sun below the horizon or the dark theme", () => {
+  const h = (sun, dark) => ({ states: sun ? { "sun.sun": { state: sun } } : {}, themes: { darkMode: dark } });
+  assert.equal(lib.isNight(h("below_horizon", false), {}), true);
+  assert.equal(lib.isNight(h("above_horizon", true), {}), true, "dark theme while the sun is up: night");
+  assert.equal(lib.isNight(h("above_horizon", false), {}), false, "light theme while the sun is up: day");
+  assert.equal(lib.isNight(h("unavailable", true), {}), true, "no usable sun: the dark theme decides");
+  assert.equal(lib.isNight(h(null, false), {}), false);
+  assert.equal(lib.isNight(h("above_horizon", true), { illustration_theme: "day" }), false);
+  assert.equal(lib.isNight(h("above_horizon", false), { illustration_theme: "night" }), true);
+  const card = mount(lib.DoorbellCard, FRONT, { ...makeHass(), themes: { darkMode: true } });
+  assert.match(html(card), /class="db-banner night/);
+});

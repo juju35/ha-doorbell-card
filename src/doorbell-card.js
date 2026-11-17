@@ -693,14 +693,12 @@ const MINI_STYLE = `
 
 let _dbUid = 0;
 
-// Night picture: forced by illustration_theme, else the sun below the horizon, else Home Assistant's dark mode.
+// Night picture: forced by illustration_theme, else the sun below the horizon or Home Assistant's dark theme.
 const isNight = (hass, config) => {
   const theme = config?.illustration_theme;
   if (theme === "night") return true;
   if (theme === "day") return false;
-  const sun = hass?.states?.["sun.sun"];
-  if (valid(sun)) return sun.state === "below_horizon";
-  return !!hass?.themes?.darkMode;
+  return hass?.states?.["sun.sun"]?.state === "below_horizon" || !!hass?.themes?.darkMode;
 };
 
 // The scene, without the doorbell (an <img> laid over it, see _banner). `uid` keeps each card's ids apart.
@@ -1261,7 +1259,7 @@ class DoorbellBase extends HTMLElement {
   }
 
   // The front of the house, the doorbell big beside the door (the card's own picture, animated by the state), the
-  // title on the wall at the left. Night: by the sun, else the dark theme, or forced by `illustration_theme`.
+  // title on the wall at the left. Night: the sun below the horizon or the dark theme, or forced by `illustration_theme`.
   _banner(dev, status, sub) {
     const night = isNight(this._hass, this._config);
     const src = this._pictureSrc(dev, status);
