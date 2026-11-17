@@ -697,11 +697,13 @@ const textWidth = (el) => {
   return range.getBoundingClientRect().width;
 };
 
+// Night picture: forced by illustration_theme, else Home Assistant's dark mode alone (a light theme keeps the day
+// picture after sunset).
 const isNight = (hass, config) => {
   const theme = config?.illustration_theme;
   if (theme === "night") return true;
   if (theme === "day") return false;
-  return hass?.states?.["sun.sun"]?.state === "below_horizon" || !!hass?.themes?.darkMode;
+  return !!hass?.themes?.darkMode;
 };
 
 // The scene, without the doorbell (an <img> laid over it, see _banner). `uid` keeps each card's ids apart.
@@ -913,7 +915,6 @@ class DoorbellBase extends HTMLElement {
       h.language,
       h.locale,
       h.themes?.darkMode,
-      h.states["sun.sun"],
       this._history,
       this._captures.length,
       this._ringing(dev),

@@ -185,7 +185,7 @@ lock: switch.gate_relay
 | `image` | both | `auto` | Picture: `auto` (drawn doorbell, animated), `none`, or the URL of your own picture (e.g. `/local/my-doorbell.png`) |
 | `color` | both | `auto` | Color of the drawn doorbell: `auto` (white for Nest and UniFi Protect, stainless steel for DoorBird, dark otherwise), `dark`, `white` or `steel` |
 | `illustration` | both | `true` | Illustrated header: the front of the house with the doorbell drawn big beside the door, animated by its state; `false` keeps the classic header (and the picture below it) |
-| `illustration_theme` | both | `auto` | Day or night picture: `auto` (night while `sun.sun` is below the horizon or the theme is dark), `day` or `night` |
+| `illustration_theme` | both | `auto` | Day or night picture: `auto` (follows the Home Assistant theme: night with a dark theme, day with a light theme), `day` or `night` |
 | `show_camera` | both | `true` | Camera preview (full card) |
 | `show_last` | both | `true` | Last visitor: time, day, how long ago and snapshot |
 | `show_actions` | both | `true` | Open, Message and Mute buttons (the mini card shows Open and Mute) |
