@@ -8,6 +8,7 @@
 - The header icon's color always follows the state: gray when idle, the accent while ringing, blue on a detection, amber when the door is unlocked, red when offline.
 - Status pill on the title line, right after the title, in the header icon's color (gray when idle); on a narrow card (≤ 260 px) it takes a line of its own under the subtitle, and below 200 px only its dot stays. The mini card's detail button is a 24 px round glass button in the top right corner of the header.
 - Night picture with the dark theme even while the sun is up
+- Full card: while idle, the big line under the header shows the last visitor's time (under a small "Last visitor" caption) instead of repeating the "Idle" already in the status pill; ringing, a detection, an unlocked door or offline stay big.
 
 ## 1.0.2 - 2026-11-14
 

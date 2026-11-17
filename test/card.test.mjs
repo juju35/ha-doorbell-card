@@ -186,7 +186,9 @@ test("the full card shows the picture, the camera, the last visitor, the actions
   assert.match(h, /class="hero"/);
   assert.match(h, /data-img="\d+"/, "drawn doorbell picture");
   assert.match(h, /data-cam="camera\.front_door_fluent"/);
-  assert.match(h, /Last visitor · <b>/);
+  // Idle: the status is in the header pill, the big line is the last visitor's time, not a second "Idle".
+  assert.match(h, /<span>Last visitor<\/span><\/div>\s*<div class="state visit-time clickable"/);
+  assert.doesNotMatch(h, /<div class="state ok">/);
   assert.match(h, /data-action="open"/);
   assert.match(h, /data-action="messages"/);
   assert.match(h, /data-action="mute"/);
@@ -206,6 +208,8 @@ test("while ringing, the picture vibrates and the camera shows a banner", () => 
   const card = mount(lib.DoorbellCard, FRONT, makeHass(ringing));
   assert.match(html(card), /Someone is at the door/);
   assert.match(html(card), /class="cam ringing"/);
+  assert.match(html(card), /<div class="state ringing">Ringing<\/div>/, "the ringing state stays big");
+  assert.match(html(card), /Last visitor · <b>/);
   const svg = lib.doorbellSvg("dark", "ringing", "ringing");
   assert.match(svg, /class="vib"/);
   assert.match(svg, /class="wv d0"/);

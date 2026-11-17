@@ -623,6 +623,7 @@ const FULL_STYLE = `
   .info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
   .state { font-size: 22px; font-weight: 400; line-height: 1.1; color: var(--ink); overflow-wrap: anywhere; }
   .visit { font-size: 13px; color: var(--primary-text-color); }
+  .visit-time { color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
   .visit .icon { color: var(--c, var(--secondary-text-color)); width: 16px; height: 16px; }
   .visit b { font-weight: 500; }
   .snap { width: 104px; height: 70px; border-radius: 10px; }
@@ -1684,10 +1685,14 @@ class DoorbellCard extends DoorbellBase {
     </div>`;
   }
 
-  // Picture, big state, last visitor (time, day, how long ago) and its snapshot when there is one.
+  // Picture, then the big line and the last visitor (time, day, how long ago) with its snapshot when there is one.
+  // The status is already in the header pill: while idle the big line is the last visitor's time (under a small
+  // "Last visitor" caption) instead of repeating "Idle"; any other state (ringing, person, motion, unlocked,
+  // offline) stays big, above the last visitor.
   _hero(dev, status) {
     const c = this._config;
-    const lines = [];
+    const idle = status.key === "idle";
+    const lines = idle ? [] : [`<div class="state ${status.cls}">${esc(status.text)}</div>`];
     let snap = "";
     if (c.show_last !== false) {
       const last = this._lastVisit(dev);
@@ -1695,19 +1700,29 @@ class DoorbellCard extends DoorbellBase {
       if (last) {
         const kinds = { ring: ICONS.bell_ring, person: ICONS.person, motion: ICONS.motion };
         const cls = last.kind === "ring" ? "ringing" : "active";
-        lines.push(
-          `<div class="line visit clickable ${cls}" role="button" tabindex="0" data-entity="${esc(last.entity)}">${svgIcon(kinds[last.kind])}<span>${esc(this._t("last_visitor"))} · <b>${esc(clock(l, last.ms))}</b></span></div>`,
-          `<div class="line">${svgIcon(ICONS.clock)}<span>${esc(`${dayLabel(this._hass, this._config, last.ms)} · ${ago(l, last.ms)}`)}</span></div>`,
-        );
+        const attrs = `role="button" tabindex="0" data-entity="${esc(last.entity)}"`;
+        const when = `<div class="line">${svgIcon(ICONS.clock)}<span>${esc(`${dayLabel(this._hass, this._config, last.ms)} · ${ago(l, last.ms)}`)}</span></div>`;
+        if (idle) {
+          lines.push(
+            `<div class="line visit clickable ${cls}" ${attrs}>${svgIcon(kinds[last.kind])}<span>${esc(this._t("last_visitor"))}</span></div>`,
+            `<div class="state visit-time clickable" ${attrs}>${esc(clock(l, last.ms))}</div>`,
+            when,
+          );
+        } else {
+          lines.push(`<div class="line visit clickable ${cls}" ${attrs}>${svgIcon(kinds[last.kind])}<span>${esc(this._t("last_visitor"))} · <b>${esc(clock(l, last.ms))}</b></span></div>`, when);
+        }
         if (this._snapSrc(dev, last.ms)) snap = this._thumb(dev, last.ms, "snap");
+      } else if (idle) {
+        lines.push(`<div class="state visit-time">${esc(this._t("no_visitor"))}</div>`);
       } else {
         lines.push(`<div class="line">${svgIcon(ICONS.bell_ring)}<span>${esc(this._t("no_visitor"))}</span></div>`);
       }
     }
+    const picture = this._picture(dev, status);
+    if (!picture && !lines.length && !snap) return "";
     return `<div class="hero">
-      ${this._picture(dev, status)}
+      ${picture}
       <div class="info">
-        <div class="state ${status.cls}">${esc(status.text)}</div>
         ${lines.join("")}
       </div>
       ${snap}
