@@ -504,3 +504,11 @@ test("night picture: forced, else the dark theme alone", () => {
   const card = mount(lib.DoorbellCard, FRONT, { ...makeHass(), themes: { darkMode: true } });
   assert.match(html(card), /class="db-banner night/);
 });
+
+test("quick messages without tts_engine: Home Assistant Cloud's engine, else the first available by ID", () => {
+  const states = (ids) => Object.fromEntries(ids.map(([id, state = "unknown"]) => [id, { entity_id: id, state, attributes: {} }]));
+  eq(lib.defaultTtsEngine({ states: states([["tts.piper"], ["tts.home_assistant_cloud"], ["light.x"]]) }), "tts.home_assistant_cloud");
+  eq(lib.defaultTtsEngine({ states: states([["tts.piper"], ["tts.google_translate_en_com"]]) }), "tts.google_translate_en_com");
+  eq(lib.defaultTtsEngine({ states: states([["tts.home_assistant_cloud", "unavailable"], ["tts.piper"]]) }), "tts.piper");
+  assert.equal(lib.defaultTtsEngine({ states: states([["light.x"]]) }), undefined);
+});

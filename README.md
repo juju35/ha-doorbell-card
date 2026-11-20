@@ -201,7 +201,7 @@ lock: switch.gate_relay
 | `zoom` | mini | `true` | Detail button at the top right of the mini card: it shows the full card's content (with the same options, so `show_history`, `collapsed`, `camera_view`… can be set on the mini card too, in YAML or in its visual editor) and switches back to the compact view; a click outside the card also brings the compact view back. `false` removes the button |
 | `messages` | both | — | Quick messages of the **Message** button. Without a list, the options of the doorbell's message `select` (UniFi Protect) are offered |
 | `tts_entity` | both | — | Speaker (`media_player`) that speaks the quick messages |
-| `tts_engine` | both | First `tts` entity | Text-to-speech engine used with `tts_entity` |
+| `tts_engine` | both | `tts.home_assistant_cloud`, else the first available `tts` entity by ID | Text-to-speech engine used with `tts_entity` |
 | `language` | both | Auto | Force language: `fr`, `en`, `de`, `es`, `sr`, `sr-Latn`, `it`, `nl`, `pt`, `pl`, `ro`, `da`, `sv`, `bg`, `ru`, `uk`, `hu`, `sk`, `cs`, `sl`, `lv` or `el` (auto-detects from HA settings) |
 
 ### Entities

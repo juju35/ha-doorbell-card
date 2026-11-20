@@ -236,6 +236,14 @@ const t = (hass, config, key, vars = {}) => String(STRINGS[lang(hass, config)][k
 const valid = (s) => !!s && !["unknown", "unavailable", ""].includes(s.state);
 const domainOf = (id) => String(id || "").split(".")[0];
 const objectId = (id) => String(id || "").split(".").slice(1).join(".");
+// The engine of the quick messages without `tts_engine`: Home Assistant Cloud's when it is set up (the engine Home
+// Assistant proposes first), else the first available `tts` entity by ID — never one picked by the order of the states.
+const defaultTtsEngine = (hass) => {
+  const ids = Object.keys(hass?.states || {})
+    .filter((id) => domainOf(id) === "tts" && hass.states[id]?.state !== "unavailable")
+    .sort();
+  return ids.find((id) => id === "tts.home_assistant_cloud") || ids[0];
+};
 const svgIcon = (path, cls = "") => `<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="${path === ICONS.doorbell ? "evenodd" : "nonzero"}" d="${path}"/></svg>`;
 const sameDeps = (a, b) => !!a && a.length === b.length && a.every((d, i) => d === b[i]);
 const clampInt = (v, def, min, max) => {
@@ -1511,7 +1519,7 @@ class DoorbellBase extends HTMLElement {
   _tts() {
     const player = this._config.tts_entity;
     if (!player) return null;
-    const engine = this._config.tts_engine || Object.keys(this._hass.states).find((id) => domainOf(id) === "tts");
+    const engine = this._config.tts_engine || defaultTtsEngine(this._hass);
     return engine ? { kind: "tts", entity: player, engine } : null;
   }
 
