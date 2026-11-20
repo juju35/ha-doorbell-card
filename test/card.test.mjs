@@ -46,6 +46,19 @@ const click = (card, dataset, extra = {}) => {
 };
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
+test("discovery: rebuilt once an entity that had no state yet gets one, cached otherwise", () => {
+  const full = makeHass();
+  const ents = { ...entities };
+  const early = { ...full, entities: ents, states: { ...full.states } };
+  delete early.states["event.gate_doorbell"];
+  const first = lib.resolve(early);
+  assert.equal(lib.resolve({ ...early, states: { ...early.states } }), first, "same registries, still no state: cached");
+  const later = lib.resolve({ ...early, states: full.states });
+  assert.notEqual(later, first, "the state arrived: rebuilt");
+  assert.equal(later.all.get(entities["event.gate_doorbell"].device_id).roles.doorbell, "event.gate_doorbell");
+  assert.equal(lib.resolve({ ...early, states: full.states }), later);
+});
+
 test("doorbells are found from the registries, whatever the integration", () => {
   const m = lib.resolve(makeHass());
   eq(

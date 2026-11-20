@@ -404,11 +404,15 @@ const roles = (hass, list, slugs = []) => {
 const resolve = (hass) => {
   if (!hass?.entities || !hass.devices) return null;
   const cached = _cache.get(hass.entities);
-  // Rebuilt when the registries change, not on every state change (device classes do not change with the state).
-  if (cached && cached.devices === hass.devices) return cached.model;
+  // Rebuilt when the registries change, not on every state change (device classes do not change with the state),
+  // and once an entity whose device class is read had no state yet (registries loaded before the states): its
+  // doorbell, motion or battery device class would otherwise stay unknown until the registries change.
+  if (cached && cached.devices === hass.devices && !cached.stateless.some((id) => hass.states?.[id])) return cached.model;
   const byDevice = new Map();
+  const stateless = [];
   for (const e of Object.values(hass.entities)) {
     if (!e?.device_id || e.hidden || e.disabled_by) continue;
+    if (!hass.states?.[e.entity_id] && ["event", "binary_sensor", "sensor"].includes(domainOf(e.entity_id))) stateless.push(e.entity_id);
     const list = byDevice.get(e.device_id) || [];
     list.push(e);
     byDevice.set(e.device_id, list);
@@ -434,7 +438,7 @@ const resolve = (hass) => {
   }
   const devices = [...all.values()].filter((d) => d.roles.doorbell).sort((a, b) => a.name.localeCompare(b.name));
   const model = { devices, all };
-  _cache.set(hass.entities, { devices: hass.devices, model });
+  _cache.set(hass.entities, { devices: hass.devices, stateless, model });
   return model;
 };
 
@@ -973,6 +977,7 @@ class DoorbellBase extends HTMLElement {
 
   disconnectedCallback() {
     this._pillResize?.disconnect();
+    if (typeof cancelAnimationFrame === "function") cancelAnimationFrame(this._pillFrame);
     this._pillWidth = null;
     this._pressing = this._dirty = false;
     window.removeEventListener("pointerup", this._onPressEnd, true);
@@ -1006,7 +1011,11 @@ class DoorbellBase extends HTMLElement {
     this._lastDeps = null;
     this._history = undefined;
     this._historyFor = undefined;
-    // Another device may be shown: the rings seen live start again.
+    // Another device may be shown: the rings seen live start again (their snapshots free their memory).
+    for (const old of this._captures || []) {
+      old.dropped = true;
+      if (old.url?.startsWith("blob:")) URL.revokeObjectURL(old.url);
+    }
     this._captures = [];
     this._seenRing = undefined;
     this._startRefresh();
