@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2 - 2026-11-20
+
+### Fixes
+- Discovery: a doorbell recognised by its device class is found once its entity gets a state, even when the registries reached the card first (it stayed missing until the registries changed).
+- The ring snapshots kept in memory are freed when the card gets a new configuration.
+- A pending status-pill fit is cancelled when the card leaves the page.
+
 ## 1.1.1 - 2026-11-18
 
 ### Fixes
