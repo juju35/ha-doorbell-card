@@ -46,6 +46,19 @@ const click = (card, dataset, extra = {}) => {
 };
 const tick = () => new Promise((r) => setTimeout(r, 0));
 
+test("discovery: rebuilt once an entity that had no state yet gets one, cached otherwise", () => {
+  const full = makeHass();
+  const ents = { ...entities };
+  const early = { ...full, entities: ents, states: { ...full.states } };
+  delete early.states["event.gate_doorbell"];
+  const first = lib.resolve(early);
+  assert.equal(lib.resolve({ ...early, states: { ...early.states } }), first, "same registries, still no state: cached");
+  const later = lib.resolve({ ...early, states: full.states });
+  assert.notEqual(later, first, "the state arrived: rebuilt");
+  assert.equal(later.all.get(entities["event.gate_doorbell"].device_id).roles.doorbell, "event.gate_doorbell");
+  assert.equal(lib.resolve({ ...early, states: full.states }), later);
+});
+
 test("doorbells are found from the registries, whatever the integration", () => {
   const m = lib.resolve(makeHass());
   eq(
@@ -490,4 +503,12 @@ test("night picture: forced, else the dark theme alone", () => {
   assert.equal(lib.isNight(h("above_horizon", false), { illustration_theme: "night" }), true);
   const card = mount(lib.DoorbellCard, FRONT, { ...makeHass(), themes: { darkMode: true } });
   assert.match(html(card), /class="db-banner night/);
+});
+
+test("quick messages without tts_engine: Home Assistant Cloud's engine, else the first available by ID", () => {
+  const states = (ids) => Object.fromEntries(ids.map(([id, state = "unknown"]) => [id, { entity_id: id, state, attributes: {} }]));
+  eq(lib.defaultTtsEngine({ states: states([["tts.piper"], ["tts.home_assistant_cloud"], ["light.x"]]) }), "tts.home_assistant_cloud");
+  eq(lib.defaultTtsEngine({ states: states([["tts.piper"], ["tts.google_translate_en_com"]]) }), "tts.google_translate_en_com");
+  eq(lib.defaultTtsEngine({ states: states([["tts.home_assistant_cloud", "unavailable"], ["tts.piper"]]) }), "tts.piper");
+  assert.equal(lib.defaultTtsEngine({ states: states([["light.x"]]) }), undefined);
 });

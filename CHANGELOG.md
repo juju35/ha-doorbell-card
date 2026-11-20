@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.2 - 2026-11-20
+
+### Fixes
+- Discovery: a doorbell recognised by its device class is found once its entity gets a state, even when the registries reached the card first (it stayed missing until the registries changed).
+- The ring snapshots kept in memory are freed when the card gets a new configuration.
+- A pending status-pill fit is cancelled when the card leaves the page.
+- Quick messages without `tts_engine` use Home Assistant Cloud's engine when it is set up, else the first available `tts` entity by ID, instead of whichever `tts` entity came first in the states (an unavailable engine is skipped).
+
 ## 1.1.1 - 2026-11-18
 
 ### Fixes
