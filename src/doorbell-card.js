@@ -2120,7 +2120,7 @@ for (const card of [
     description: "Compact video doorbell overview: status, last visitor and quick actions.",
   },
 ]) {
-  if (!window.customCards.some((c) => c.type === card.type)) window.customCards.push({ ...card, preview: true, documentationURL: "https://github.com/juju35/ha-doorbell-card" });
+  if (!window.customCards.some((c) => c.type === card.type)) window.customCards.push({ ...card, preview: false, documentationURL: "https://github.com/juju35/ha-doorbell-card" });
 }
 
 console.info(`%c DOORBELL-CARD %c v${VERSION} `, "color: white; background: #ef6c00; font-weight: 700;", "color: #ef6c00; background: white; font-weight: 700;");
