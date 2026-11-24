@@ -7,8 +7,9 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 import { devices, entities, FRONT, GATE, states } from "../scripts/mock-states.mjs";
+import { sources } from "./source.mjs";
 
-const read = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8");
+const read = (f) => (sources[f] ?? readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8"));
 const source = `${read("strings.js")}\n${read("doorbell-card.js")}`;
 let chromium;
 try {
