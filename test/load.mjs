@@ -1,9 +1,10 @@
-// Evaluates the card source (src/strings.js then src/doorbell-card.js, as scripts/build.mjs bundles them) in a
+// Evaluates the card source (the bundled card source (test/source.mjs) then the bundled card source (test/source.mjs), as scripts/build.mjs bundles them) in a
 // sandbox with minimal DOM stand-ins and returns the names the tests need. No dependency, no browser.
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
+import { sources } from "./source.mjs";
 
-const read = (f) => readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8");
+const read = (f) => (sources[f] ?? readFileSync(new URL(`../src/${f}`, import.meta.url), "utf8"));
 const source = `${read("strings.js")}\n${read("doorbell-card.js")}`;
 
 // Shadow root stand-in: keeps the HTML it is given and the listeners it gets.

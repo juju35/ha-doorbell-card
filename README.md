@@ -337,6 +337,8 @@ npm test             # unit tests (no browser)
 npm run screenshots  # renders the cards (and one GIF per animated state, needs ffmpeg) with mock data into screenshots/
 ```
 
+The source is split into ES modules under `src/strings/` (entry `src/strings/index.js`), `src/doorbell-card/` (entry `src/doorbell-card/index.js`); `npm run build` assembles them (`scripts/bundle.mjs`) into the single file the Marketplace serves.
+
 `dist/` is not committed: `npm run build` creates it locally, CI builds it on every push, and the release workflow attaches the built files to the release, which is where the Marketplace installs them from. The **Screenshots** workflow renders the captures on every pull request that changes the card and commits them to the pull request's branch.
 
 ### Releasing

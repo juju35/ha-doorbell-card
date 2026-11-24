@@ -1,14 +1,15 @@
-// Bundles src/strings.js (the translations) and src/doorbell-card.js into the single file dist/doorbell-card.js.
+// Bundles the ES modules of src/strings/ (entry src/strings/index.js, assembled by scripts/bundle.mjs) (the translations) and src/doorbell-card.js into the single file dist/doorbell-card.js.
 // Usage: node scripts/build.mjs  (dist/ is not committed: CI and the release workflow build it)
 import { mkdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { splitDist } from "./i18n-split.mjs";
+import { bundle } from "./bundle.mjs";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
 const pkg = JSON.parse(readFileSync(`${root}package.json`, "utf8"));
 
 // The card's source is one classic script: the translation table first, as the cards read it at their first render.
-export const source = () => `${readFileSync(`${root}src/strings.js`, "utf8")}\n${readFileSync(`${root}src/doorbell-card.js`, "utf8")}`;
+export const source = () => `${bundle("src/strings/index.js")}\n${bundle("src/doorbell-card/index.js")}`;
 
 if (process.argv[1] && realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))) {
   const out = source().replace("__VERSION__", pkg.version);
