@@ -490,7 +490,7 @@ export class DoorbellBase extends HTMLElement {
   }
 
   // The front of the house, the doorbell big beside the door (the card's own picture, animated by the state), the
-  // title on the wall at the left. Night: the sun below the horizon or the dark theme, or forced by `illustration_theme`.
+  // title on the wall at the left. Night: the dark theme, or forced by `illustration_theme`.
   _banner(dev, status, sub) {
     const night = isNight(this._hass, this._config);
     const src = this._pictureSrc(dev, status);
