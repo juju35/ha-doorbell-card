@@ -4,7 +4,7 @@
 
 export const BASE_STYLE = `
   :host { --db-accent: #ef6c00; --db-ok: var(--success-color, #43a047); --db-warn: var(--warning-color, #ffa600);
-          --db-crit: var(--error-color, #db4437); --db-idle: var(--disabled-text-color, #9e9e9e); --db-active: var(--info-color, #039be5);
+          --db-crit: var(--error-color, #db4437); --db-idle: var(--secondary-text-color, #9e9e9e); --db-active: var(--info-color, #039be5);
           /* Text in a state or accent color is mixed with the text color, so that it reads at 4.5:1 at least. */
           --db-accent-text: color-mix(in srgb, var(--db-accent) 55%, var(--primary-text-color));
           --db-glass: color-mix(in srgb, var(--primary-text-color) 6%, transparent);
@@ -207,7 +207,8 @@ export const MINI_STYLE = `
 // ---------------------------------------------------------------------------
 
 
-// Night picture: forced by illustration_theme, else the sun below the horizon or Home Assistant's dark theme.
+// Night picture: forced by illustration_theme, else Home Assistant's dark theme alone (a light theme keeps the day
+// picture after sunset).
 // The width of an element's whole text in fractional pixels, even while it is cut with an ellipsis (0 when hidden).
 export const textWidth = (el) => {
   if (!el?.getClientRects?.().length || typeof document.createRange !== "function") return 0;
